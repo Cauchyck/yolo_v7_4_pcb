@@ -121,7 +121,7 @@ def generate_xml(filename, random_locations):
     list_top = []
     list_bndbox = []
 
-    output_folder = "gen_data/generate_xml"  # 存放生成图像的文件夹
+    output_folder = "/data/objectDetect/yolo_v7/VOCdevkit/VOC2007/Annotations"  # 存放生成图像的文件夹
     # 创建输出文件夹
     os.makedirs(output_folder, exist_ok=True)
     filename = filename.replace('.jpg', '.xml')
@@ -137,7 +137,6 @@ def generate_xml(filename, random_locations):
     list_top.extend([xml_save_path, 'folder_path_tuple', filename, xml_save_path, checked,
                      1226, 1220, depth])
 
-
     # 绘制矩形框 #
     # cv2.rectangle(img=canvas, pt1=(xmin, ymax), pt2=(xmax, ymin), color=COLOR_MAP["green"], thickness=5)
     # cv2.imwrite("draw_rectangle.png", canvas)
@@ -145,34 +144,32 @@ def generate_xml(filename, random_locations):
 
     # 添加针脚位置
     for loc in random_locations:
-        xmin, ymin, xmax, ymax= loc
+        xmin, ymin, xmax, ymax, side= loc
 
-        list_bndbox.extend(['pin', flag, pose, truncated, difficult,
+        list_bndbox.extend(['OK', flag, pose, truncated, difficult,
                             str(xmin), str(ymin), str(xmax), str(ymax)])
 
     Xml_make().txt_to_xml(list_top, list_bndbox)
     print(xml_save_path)
 
 
-def generate_random_location(number, x1, y1, w, h):
+def generate_random_location(number, x1, y1, x2, y2, x3, y3, x4, y4, w, h):
     '''
-    随机生成n个针脚位置，生成坐标要求针脚放置区域，且放置针脚图像后不会重叠，针脚size约为70*140
+    随机生成n个针脚位置，生成坐标要求针脚放置区域，且放置针脚图像后不会重叠，针脚size约为40*120
     如果位置在下侧，down为1，否则为0
 
     :param number: int, 放置针脚个数
-    :param x1: int, 图像上侧区域原点x
-    :param y1: int, 图像上侧区域原点y
-    :param x2: int, 图像下侧区域原点x
-    :param y2: int, 图像下侧区域原点y
+    :param x: int, 图像上侧区域原点x
+    :param y: int, 图像上侧区域原点y
     :param w:  int, 区域宽度
     :param h:  int, 区域高度
-    :return: list of tuple, locations[(xmin, ymin, xmax, ymax, down),]
+    :return: list of tuple, locations[(xmin, ymin, xmax, ymax, side),]
     '''
 
     pin_width = 40
     pin_height = 120
     locations = []
-    max_attempts = 1000  # 最大尝试次数，以避免无限循环
+    max_attempts = 2000  # 最大尝试次数，以避免无限循环
 
     def is_overlap(new_loc):
         ''' 检查新位置是否与已存在的位置重叠 '''
@@ -183,13 +180,32 @@ def generate_random_location(number, x1, y1, w, h):
         return False
 
     attempts = 0
+    sides = ['top','right', 'bottom', 'left']
     while len(locations) < number and attempts < max_attempts:
-        xmin = random.randint(x1, x1 + w - pin_width)
-        ymin = y1
-        xmax = xmin + pin_width
-        ymax = ymin + pin_height
+        side = random.choice(sides)
 
-        new_location = (xmin, ymin, xmax, ymax)
+        if side == 'top':
+            xmin = random.randint(x1, x1 + w - pin_width)
+            ymin = y1
+            xmax = xmin + pin_width
+            ymax = ymin + pin_height
+        elif side == 'right':
+            xmin = x2
+            ymin = random.randint(y2, y2 + w - pin_width)
+            xmax = xmin + pin_height
+            ymax = ymin + pin_width
+        elif side == 'bottom':
+            xmin = random.randint(x3, x3 + w - pin_width)
+            ymin = y3
+            xmax = xmin + pin_width
+            ymax = ymin + pin_height
+        else:  # left
+            xmin = x4
+            ymin = random.randint(y4, y4 + w - pin_width)
+            xmax = xmin + pin_height
+            ymax = ymin + pin_width
+
+        new_location = (xmin, ymin, xmax, ymax, side)
 
         if not is_overlap(new_location):
             locations.append(new_location)
@@ -208,30 +224,38 @@ def generate_image(image, random_locations):
     如果down为0，需要将针脚图像旋转180度
 
     :param image: numpy array, 模版图像
-    :param random_locations: list of tuple, locations[(xmin, ymin, xmax, ymax, down),]
-    :param pin_folder: str, 针脚图像文件夹路径
+    :param random_locations: list of tuple, locations[(xmin, ymin, xmax, ymax, side),]
     :return: numpy array, 融合后的图像
     '''
     pin_folder = "template_images/4pins"
     pin_images = [f for f in os.listdir(pin_folder) if os.path.isfile(os.path.join(pin_folder, f))]
 
+    for loc in random_locations:
+        xmin, ymin, xmax, ymax, side = loc
+        pin_image_path = os.path.join(pin_folder, random.choice(pin_images))
+        pin_image = cv2.imread(pin_image_path)
 
-    for i in range(4):
-        for loc in random_locations:
-            xmin, ymin, xmax, ymax = loc
-            pin_image_path = os.path.join(pin_folder, random.choice(pin_images))
-            pin_image = cv2.imread(pin_image_path)
-
-            if pin_image is None:
-                print(f"Error reading {pin_image_path}")
-                continue
-
+        if pin_image is None:
+            print(f"Error reading {pin_image_path}")
+            continue
+        if side == 'bottom':
+            pin_image = cv2.rotate(pin_image, cv2.ROTATE_180)
             # 调整针脚图像大小为 (xmax - xmin) x (ymax - ymin)
             pin_image = cv2.resize(pin_image, (xmax - xmin, ymax - ymin))
-            # 将针脚图像粘贴到模板图像的相应位置
-            image[ymin:ymax, xmin:xmax] = pin_image
-        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-    output_folder = "gen_data/generate_data"  # 存放生成图像的文件夹
+        elif side == 'left':
+            pin_image = cv2.rotate(pin_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            # 调整针脚图像大小为 (xmax - xmin) x (ymax - ymin)
+            pin_image = cv2.resize(pin_image, (xmax - xmin, ymax - ymin))
+        elif side == 'right':
+            pin_image = cv2.rotate(pin_image, cv2.ROTATE_90_CLOCKWISE)
+            # 调整针脚图像大小为 (xmax - xmin) x (ymax - ymin)
+            pin_image = cv2.resize(pin_image, (xmax - xmin, ymax - ymin))
+        else:
+            # 调整针脚图像大小为 (xmax - xmin) x (ymax - ymin)
+            pin_image = cv2.resize(pin_image, (xmax - xmin, ymax - ymin))
+        # 将针脚图像粘贴到模板图像的相应位置
+        image[ymin:ymax, xmin:xmax] = pin_image
+    output_folder = "/data/objectDetect/yolo_v7/VOCdevkit/VOC2007/JPEGImages"  # 存放生成图像的文件夹
     # 创建输出文件夹
     os.makedirs(output_folder, exist_ok=True)
     # 使用时间戳命名图像文件
@@ -252,7 +276,6 @@ def generate_image(image, random_locations):
 
     generate_xml(image_filename, random_locations)
 
-
 def generate_and_save_images(num_images):
     # 读取背景图像
     background_path = "template_images/557.jpg"  # 替换为实际图像路径
@@ -260,13 +283,13 @@ def generate_and_save_images(num_images):
 
     # print(random_text)cv2.rotate(image, cv2.ROTATE_90)
     for i in range(num_images):
-        num = random.randint(5, 20)
-        random_location = generate_random_location(num, 200, 30, 800, 100)
+        num = random.randint(1, 100)
+        random_location = generate_random_location(num, 200, 30, 1076,201,206,1076,30,205,  800, 100)
         generate_image(background.copy(), random_location)
 
 
 def main():
-    num_images = 1  # 要生成的图像数量
+    num_images = 2000 # 要生成的图像数量
 
     # 生成并保存图像
     generate_and_save_images(num_images)

@@ -121,7 +121,7 @@ def generate_xml(filename, random_locations, labels):
     list_top = []
     list_bndbox = []
 
-    output_folder = "VOCdevkit/VOC2007/Annotations"  # 存放生成图像的文件夹
+    output_folder = "/data/objectDetect/yolo_v7/VOCdevkit/VOC2007/Annotations"  # 存放生成图像的文件夹
     # 创建输出文件夹
     os.makedirs(output_folder, exist_ok=True)
     filename = filename.replace('.jpg', '.xml')
@@ -172,7 +172,7 @@ def generate_random_location(number, x1, y1, x2, y2, w, h):
     pin_width = 70
     pin_height = 140
     locations = []
-    max_attempts = 1000  # 最大尝试次数，以避免无限循环
+    max_attempts = 2000  # 最大尝试次数，以避免无限循环
 
     def is_overlap(new_loc):
         ''' 检查新位置是否与已存在的位置重叠 '''
@@ -218,7 +218,7 @@ def generate_image(image, random_locations):
     :param pin_folder: str, 针脚图像文件夹路径
     :return: numpy array, 融合后的图像
     '''
-    pin_folder = "gen_data/template_images/pins"
+    pin_folder = "template_images/pins"
     pin_images = [f for f in os.listdir(pin_folder) if os.path.isfile(os.path.join(pin_folder, f))]
 
 
@@ -242,7 +242,7 @@ def generate_image(image, random_locations):
         # 将针脚图像粘贴到模板图像的相应位置
         image[ymin:ymax, xmin:xmax] = pin_image
 
-    output_folder = "VOCdevkit/VOC2007/JPEGImages"  # 存放生成图像的文件夹
+    output_folder = "/data/objectDetect/yolo_v7/VOCdevkit/VOC2007/JPEGImages"  # 存放生成图像的文件夹
     # 创建输出文件夹
     os.makedirs(output_folder, exist_ok=True)
     # 使用时间戳命名图像文件
@@ -330,18 +330,18 @@ def generate_image_draw(image, random_locations):
     cv2.imwrite(output_path, image)
 def generate_and_save_images(num_images):
     # 读取背景图像
-    background_path = "gen_data/template_images/background.png"  # 替换为实际图像路径
+    background_path = "template_images/background.png"  # 替换为实际图像路径
     background = cv2.imread(background_path)
 
     # print(random_text)
     for i in range(num_images):
-        num = random.randint(4, 20)
+        num = random.randint(1, 50)
         random_location = generate_random_location(num, 80, 40, 80, 430,550, 100)
         generate_image(background.copy(), random_location)
         # generate_image_draw(background.copy(), random_location)
 
 def main():
-    num_images = 1000  # 要生成的图像数量
+    num_images = 1000 # 要生成的图像数量
 
     # 生成并保存图像
     generate_and_save_images(num_images)

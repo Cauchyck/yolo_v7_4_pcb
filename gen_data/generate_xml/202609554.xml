@@ -1,21 +1,18 @@
-<?xml version='1.0' encoding='utf-8'?>
-<annotation verified="no">
-	<folder>folder_path_tuple</folder>
-	<filename>202609554.xml</filename>
-	<path>gen_data/generate_xml/202609554.xml</path>
-	<checked>NO</checked>
+<annotation>
+	<folder>generate_data</folder>
+	<filename>202609554.jpg</filename>
+	<path>\\mac\KIOXIARC20\pcb\yolov7-pytorch-master\gen_data\generate_data\202609554.jpg</path>
 	<source>
 		<database>Unknown</database>
 	</source>
 	<size>
 		<width>703</width>
 		<height>602</height>
-		<depth>1</depth>
+		<depth>3</depth>
 	</size>
 	<segmented>0</segmented>
 	<object>
 		<name>OK</name>
-		<flag>rectangle</flag>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
@@ -28,7 +25,6 @@
 	</object>
 	<object>
 		<name>OK</name>
-		<flag>rectangle</flag>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
@@ -41,7 +37,6 @@
 	</object>
 	<object>
 		<name>NG</name>
-		<flag>rectangle</flag>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
@@ -54,7 +49,6 @@
 	</object>
 	<object>
 		<name>OK</name>
-		<flag>rectangle</flag>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
@@ -67,7 +61,6 @@
 	</object>
 	<object>
 		<name>NG</name>
-		<flag>rectangle</flag>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
@@ -80,7 +73,6 @@
 	</object>
 	<object>
 		<name>NG</name>
-		<flag>rectangle</flag>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
